@@ -1,0 +1,19 @@
+{
+        "general": {
+                "jira_server": "http://192.168.1.17:8080",
+                "jira_projects": [
+                        "JIRAMETRICS",
+                        "AZUREFUNCTIONS"
+                ],
+                "jira_footprint": "/tree/master",
+                "foo": "fff"
+        },
+        "github_repos": {
+                "jiracharts": {
+                        "repo_url": "https://github.com/bobk/jiracharts",
+                        "repo_lastscan_time": "2020-01-14T12:34:56",
+                        "jira_comment_format": "|[*<repo_name>*|<repo_url>/tree/master]|[<branch_name>|<branch_url>]|[<commit_message>|<commit_url>] (<commit_abbrev>, <commit_author>)|\n",
+                        "jira_comment_maxnum": 10
+                }
+        }
+}
