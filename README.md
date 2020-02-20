@@ -19,6 +19,7 @@ This example code set uses the PyGitHub and jira-python libraries to perform var
    * store commit info in a custom field
    * add commit stats (files, lines)
    * add code to remove older comments (comments added by this code)
+1) move repo_lastscan_timestamp value to separate config file
 
 #### configuration file
 
@@ -36,10 +37,5 @@ This example code set uses the PyGitHub and jira-python libraries to perform var
 
 1) set the GITHUB_PASSWORD env var to your GitHub PAT
 1) set the JIRA_USERNAME and JIRA_PASSWORD env vars to the correct values 
-   * (note that for Jira Server, you will have to use a real username and password, for Jira Cloud, you can use a username and API token)
+   * (note that for Jira Server, you use a user name and password, for Jira Cloud, you use the user email and API token)
 1) run the script
-
-
-
-
-
