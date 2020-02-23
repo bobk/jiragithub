@@ -7,6 +7,7 @@
 #
 #   see documentation on operation and configuration before using
 #
+#   this is template code for others to copy and extend, so extensive error checking has not been added yet
 
 from github import Github
 from jira import JIRA
@@ -15,6 +16,7 @@ import datetime
 import json
 import re
 import requests
+import argparse
 from datetime import datetime
 from lxml import html
 
@@ -32,8 +34,11 @@ def get_branches_commit(repo_html_url, commit_sha):
 
 def main():
 
+    configfile_name = 'jiragithub-config.json'
+    runtimedatafile_name = 'jiragithub-runtimedata.json'
+
 #   read in all of our config file values - see docs for explanation of each
-    with open('jiragithub-config.json', 'r') as config_file:
+    with open(configfile_name, 'r') as config_file:
         config = json.load(config_file)
         config_file.close
     jira_projects = config['general']['jira_projects']
@@ -55,25 +60,30 @@ def main():
     options = { "server" : jira_server }
     jira = JIRA(options, basic_auth=(jira_username, jira_password))
 
+#   load our runtime data file, if it exists
+    runtimedata = {}
+    if (os.path.exists(runtimedatafile_name)):
+        with open(runtimedatafile_name, 'r') as runtimedata_file:
+            runtimedata = json.load(runtimedata_file)
+            runtimedata_file.close
+    else:
+        runtimedata['lastscan_timestamp'] = str(datetime.min)
+    lastscan_timestamp = datetime.fromisoformat(runtimedata['lastscan_timestamp'])
+
 #   go through each GitHub repo in the config file, look for commits since the last scan time with(for that repo)
 #   that have a commit message that contains a Jira issuekey that is in our project list
     for repo_name in config['github_repos']:
-        repo_lastscan_timestamp_text = config['github_repos'][repo_name]['repo_lastscan_timestamp']
-        if not (repo_lastscan_timestamp_text == ''):
-            repo_lastscan_timestamp = datetime.fromisoformat(repo_lastscan_timestamp_text)
-        else:
-            repo_lastscan_timestamp = datetime.min
         jira_comment_format = config['github_repos'][repo_name]['jira_comment_format']
 
 #   connect to the repo and get all the commits since the last scan time
         repo = githubconn.get_repo(github_org + '/' + repo_name)
-        commits = repo.get_commits(since=repo_lastscan_timestamp)
+        commits = repo.get_commits(since=lastscan_timestamp)
         for commit in commits:
             message = commit.commit.message
 #   for each commit, look in all the projects to see if there is a match
             for jira_project in jira_projects:
-                pattern = re.compile(r'(' + jira_project + '-[0-9]+)')
-                match = pattern.match(message)
+                pattern = re.compile('(' + jira_project + '-[0-9]+)', re.IGNORECASE)
+                match = pattern.search(message)
 #   if there is a match, write a new comment to the Jira issue
                 if (match):
                     jira_issue = jira.issue(match.group(1))
@@ -91,14 +101,21 @@ def main():
                         jira_comment = jira_comment.replace('<commit_url>', commit.commit.html_url)
                         jira_comment = jira_comment.replace('<commit_abbrev>', commit.commit.sha[:7])
                         jira_comment = jira_comment.replace('<commit_author>', commit.commit.author.name)
-
 #   add the new comment
                         jira.add_comment(jira_issue, jira_comment)
 
-#   update our config file with the new timestamp, so that we do not process the same commits again
-        config['github_repos'][repo_name]['repo_lastscan_timestamp'] = str(datetime.today())
-        with open('jiragithub-config.json', 'w') as config_file:
-            json.dump(config, config_file, indent=4)
+#   now search the commit message for a transition command
+                        pattern = re.compile(r' transition\((\w+)\)', re.IGNORECASE)
+                        match = pattern.search(message)
+                        if (match):
+                            jira_transition = match.group(1)
+                            jira.transition_issue(jira_issue, jira_transition)
+
+#   update our runtime data file with the new timestamp, so that we do not process the same commits again
+        runtimedata['lastscan_timestamp'] = str(datetime.today())
+        with open(runtimedatafile_name, 'w') as runtimedata_file:
+            json.dump(runtimedata, runtimedata_file, indent=4)
+            runtimedata_file.close
 
 if __name__== "__main__" :
     main()
