@@ -5,6 +5,7 @@ This example code set uses the PyGitHub and jira-python libraries to perform var
 ### jiragithub-update_comments.py: 
     
 - based on Jira issuekeys found in GitHub commit messages, adds GitHub commit information as comments to the associated Jira issues
+- based on "transition(<transitionname>)" in the GitHub commit message, move the Jira issue found in the commit message through the specified transition
 
 #### general notes
 
@@ -19,7 +20,6 @@ This example code set uses the PyGitHub and jira-python libraries to perform var
    * store commit info in a custom field
    * add commit stats (files, lines)
    * add code to remove older comments (comments added by this code)
-1) move repo_lastscan_timestamp value to separate config file
 
 #### configuration file
 
@@ -38,4 +38,6 @@ This example code set uses the PyGitHub and jira-python libraries to perform var
 1) set the GITHUB_PASSWORD env var to your GitHub PAT
 1) set the JIRA_USERNAME and JIRA_PASSWORD env vars to the correct values 
    * (note that for Jira Server, you use a user name and password, for Jira Cloud, you use the user email and API token)
+1) edit the config file to include your Jira server, Jira project(s), GitHub org and repos
 1) run the script
+1) the script should pick up all commits that contain a Jira issue in your project(s), update the comment for those issues, and optionally move the issue through the specified transition
