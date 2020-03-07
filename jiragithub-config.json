@@ -6,12 +6,13 @@
             "AZUREFUNCTIONS"
         ],
         "jira_comment_footprint": "/tree/master]|",
+        "jira_comment_removeissuekey": true,
         "github_org": "bobk",
         "github_base_url": ""
     },
     "github_repos": {
         "jiracharts": {
-            "jira_comment_format": "|[*<repo_name>*|<repo_url>/tree/master]|[<branch_name>|<branch_url>]|[<commit_message>|<commit_url>] (<commit_abbrev>, <commit_author>)|\n"
+            "jira_comment_format": "| *<commit_author>* {color:gray}committed on <commit_timestamp>{color} |\n\n|{panel:bgColor=lightgray}[<commit_message>|<commit_url>]{panel}|\n\n| repo: [*<repo_name>*|<repo_url>/tree/master] | branch: [<branch_name>|<branch_url>] | sha: <commit_shaabbrev> | lines: *{color:green}<commit_additions>{color}/{color:red}<commit_deletions>{color}* |\n"
         }
     }
 }

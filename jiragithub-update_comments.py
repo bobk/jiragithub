@@ -43,6 +43,7 @@ def main():
         config_file.close
     jira_projects = config['general']['jira_projects']
     jira_comment_footprint = config['general']['jira_comment_footprint']
+    jira_comment_removeissuekey = config['general']['jira_comment_removeissuekey']
 
 #   get GitHub PAT from env var and connect to GitHub
     githubkey = os.environ['GITHUB_PASSWORD']
@@ -97,19 +98,33 @@ def main():
                         jira_comment = jira_comment.replace('<branch_name>', branch_name)
                         branch_url = repo.html_url + "/tree/" + branch_name
                         jira_comment = jira_comment.replace('<branch_url>', branch_url)
-                        jira_comment = jira_comment.replace('<commit_message>', commit.commit.message)
+                        commit_message = commit.commit.message
+                        if (jira_comment_removeissuekey):
+                            commit_message = commit_message.replace(jira_issue.key, '').strip()
+                        jira_comment = jira_comment.replace('<commit_message>', commit_message)
                         jira_comment = jira_comment.replace('<commit_url>', commit.commit.html_url)
-                        jira_comment = jira_comment.replace('<commit_abbrev>', commit.commit.sha[:7])
+                        jira_comment = jira_comment.replace('<commit_shaabbrev>', commit.commit.sha[:7])
+                        jira_comment = jira_comment.replace('<commit_sha>', commit.commit.sha)
                         jira_comment = jira_comment.replace('<commit_author>', commit.commit.author.name)
+                        jira_comment = jira_comment.replace('<commit_timestamp>', str(commit.commit.last_modified))
+                        jira_comment = jira_comment.replace('<commit_additions>', '+' + str(commit.stats.additions))
+                        jira_comment = jira_comment.replace('<commit_deletions>', '-' + str(commit.stats.deletions))
 #   add the new comment
                         jira.add_comment(jira_issue, jira_comment)
 
-#   now search the commit message for a transition command
+#   now search the commit message for a transition command "transition(<transition name>)", and if found, transition the issue
                         pattern = re.compile(r' transition\((\w+)\)', re.IGNORECASE)
                         match = pattern.search(message)
                         if (match):
                             jira_transition = match.group(1)
                             jira.transition_issue(jira_issue, jira_transition)
+
+#   now search the commit message for an assign command "assign(<assignee name>)", and if found, assign the issue
+                        pattern = re.compile(r' assign\(([\w\-\ \@\.]+)\)', re.IGNORECASE)
+                        match = pattern.search(message)
+                        if (match):
+                            jira_assign = match.group(1)
+                            jira.assign_issue(jira_issue, jira_assign)
 
 #   update our runtime data file with the new timestamp, so that we do not process the same commits again
         runtimedata['lastscan_timestamp'] = str(datetime.today())
