@@ -23,7 +23,13 @@ from lxml import html
 #   this is an undocumented and unsupported GitHub HTML API for getting the branch(es) containing a commit
 #   since it is just HTML we have to parse it with lxml and xpath
 def get_branches_commit(repo_html_url, commit_sha):
+    """
+    get_branches_commit(repo_html_url, commit_sha)
 
+    this is an undocumented and unsupported GitHub HTML API for getting the branch(es) containing a commit
+    since it is just HTML we have to parse it with lxml and xpath
+
+    """
     api_html_url = repo_html_url.strip("/") + "/branch_commits/" + commit_sha
     github_tree = html.fromstring(requests.get(api_html_url).content)
     
